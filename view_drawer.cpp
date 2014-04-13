@@ -36,7 +36,6 @@ void ViewDrawer::initialize() {
 
 	projection_set_screen();
 
-	TEMP_VBO_SHIT();
 	// SDL_GL_SetSwapInterval(1);
 }
 
@@ -57,59 +56,103 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	float vals[grump_vbo_num*(3+2)] = {
 		//Vertex locations
 		0.0, 0.0, -1.0,
-		0.0, 800.0, -1.0,
-		1000.0, 800.0, -1.0,
-		1000.0, 0.0, -1.0,
+		1.0, 0.0, -1.0,
+		1.0, 1.0, -1.0,
+		0.0, 1.0, -1.0,
 		//Texture locations
 		0.0, 1.0,
-		0.0, 0.0,
-		1.0, 0.0,
 		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0,
 	};
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*grump_vbo_num*(3+2), vals, GL_STATIC_DRAW);
 
 	//Generate the frame buffer, texture, 
-	glGenFramebuffers(1, &shadow_frame_buffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	glGenFramebuffers(1, &occluder_frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 
-	glGenTextures(1, &shadow_texture);
-	glBindTexture(GL_TEXTURE_2D, shadow_texture);
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL, 1024, 1024, 0, GL, GL_FLOAT, 0);
+	//Depth stuff?
+	// GLuint depthrenderbuffer;
+	// glGenRenderbuffers(1, &depthrenderbuffer);
+	// glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+	// glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 512, 512);
+	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
 
 
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_OCCLUDER), 0);
+	glDrawBuffer(GL_NONE);
+
+	GLuint error = glGetError();
+	if (error != 0) {
+		std::cerr << "GL ERROR BUILDING FRAMEBUFFER: " << error << " " << gluErrorString(error) << std::endl;
+	}
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "INCOMPLETE FRAME BUFFER STATUS DURING BUILD" << std::endl;
+	}
 }
 
-void ViewDrawer::draw_screen() {
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture) {
+	game.get_state().use_program(shader);
 
-	GLuint error;
-	game.get_state().use_program(SH_PASS);
-
-	glActiveTexture(GL_TEXTURE0);
-	game.get_state().bind_texture(TH_GRUMP);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glActiveTexture(GL_TEXTURE1);
+	game.get_state().bind_texture(texture);
 
 	GLfloat mvmat[16], promat[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
 	glGetFloatv(GL_PROJECTION_MATRIX, promat);
 
-	glUniformMatrix4fv(game.get_state().get_uniform_loc(SH_PASS, "view_matrix"), 1, false, mvmat);
-	glUniformMatrix4fv(game.get_state().get_uniform_loc(SH_PASS, "proj_matrix"), 1, false, promat);
-	glUniform1i(game.get_state().get_uniform_loc(SH_PASS, "in_texture"), 0);
+	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "view_matrix"), 1, false, mvmat);
+	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "proj_matrix"), 1, false, promat);
+	glUniform1i(game.get_state().get_uniform_loc(shader, "in_texture"), 1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, grump_vbo);
-	glEnableVertexAttribArray(game.get_state().get_shader_attrs(SH_PASS)[0].first);
-	glVertexAttribPointer(game.get_state().get_shader_attrs(SH_PASS)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(game.get_state().get_shader_attrs(SH_PASS)[1].first);
-	glVertexAttribPointer(game.get_state().get_shader_attrs(SH_PASS)[1].first, 2, GL_FLOAT, GL_FALSE, 0, (char*)NULL+sizeof(float)*grump_vbo_num*3);
-	glDrawArrays(GL_QUADS, 0, grump_vbo_num);
+	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
+	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[1].first);
+	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[1].first, 2, GL_FLOAT, GL_FALSE, 0, (char*)NULL+sizeof(float)*4*3);
+	glDrawArrays(GL_QUADS, 0, 4);
+}
+
+void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
+	glPushMatrix();
+	glScalef(1000, 800, 1);
+	draw_texture(shader_id, TH_GRUMP);
+	glPopMatrix();
+}
+
+void ViewDrawer::draw_screen() {
+	GLuint error;
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
+	GLenum gca0 = GL_COLOR_ATTACHMENT0;
+	glDrawBuffers(1, &gca0);
+	draw_grumps(SH_OCCLUDER);
+	error = glGetError();
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "INCOMPLETE FRAME BUFFER STATUS DURING BUILD" << std::endl;
+	}
+	if (error != 0) {
+		std::cerr << "GL ERROR DRAWING FRAMEBUFFER: " << error << " " << gluErrorString(error) << std::endl;
+	}
+
+	//Actual render to screen
+	glPushMatrix();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glScalef(1000.0, 800.0, 1.0);
+	draw_texture(SH_PASS, TH_OCCLUDER);
+
+	glPopMatrix();
 	error = glGetError();
 	if (error != 0) {
-		std::cerr << "GL ERROR DRAWING GRUMP: " << error << " " << gluErrorString(error) << std::endl;
+		std::cerr << "GL ERROR DRAWING FINAL TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
 	}
+
+	glActiveTexture(GL_TEXTURE0);
+	game.get_state().bind_texture(TH_GRUMP);
 
 	glUseProgram(0);
 	glBegin(GL_QUADS);

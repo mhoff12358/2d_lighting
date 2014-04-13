@@ -17,6 +17,8 @@ using std::string;
 
 enum TH_tex_id {
 	TH_GRUMP,
+	TH_OCCLUDER,
+	TH_SHADOWS,
 	TH_NUM_TEX
 };
 
@@ -30,6 +32,8 @@ public:
 	~Texture();
 
 	void load_file(const char* file_name);
+	void load_empty(unsigned int, unsigned int);
+	void load_empty(unsigned int);
 	void bind();
 	
 	GLuint get_name();

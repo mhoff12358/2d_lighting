@@ -27,6 +27,18 @@ void Texture::load_file(const char * file_name) {
 	SDL_FreeSurface(in_surface);
 }
 
+void Texture::load_empty(unsigned int width, unsigned int height) {
+	bind();
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void Texture::load_empty(unsigned int width) {
+	bind();
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RED, width, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+}
+
 unsigned int Texture::get_width() {
 	return size[0];
 }

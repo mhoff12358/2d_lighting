@@ -23,8 +23,7 @@ private:
 
 	//Temporary stuff, should be moved out into actors
 	GLuint grump_vbo;
-	GLuint shadow_frame_buffer;
-	GLuint shadow_texture;
+	GLuint occluder_frame_buffer;
 
 public:
 	ViewDrawer(Game& g) : game(g) {}
@@ -37,6 +36,8 @@ public:
 	void projection_set_screen();
 
 	void draw_screen();
+	void draw_texture(SH_prog_id shader, TH_tex_id texture);
+	void draw_grumps(SH_prog_id);
 };
 
 #endif

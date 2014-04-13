@@ -24,6 +24,8 @@ void Game::mainloop() {
 	vs.load_images();
 	vs.create_shaders();
 
+	vd.TEMP_VBO_SHIT();
+
 	ioc.initialize();
 
 

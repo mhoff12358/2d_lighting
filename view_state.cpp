@@ -76,6 +76,14 @@ void ViewState::create_shaders() {
 	pass_shad.add_attribute("tex_coord");
 	pass_shad.link_program();
 
+	ShaderProgram& pass_tex_shad = sh.access_program(SH_PASS_TEX);
+	pass_tex_shad.create_program();
+	pass_tex_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
+	pass_tex_shad.add_shader(GL_FRAGMENT_SHADER, "pass_tex.frag");
+	pass_tex_shad.add_attribute("in_position");
+	pass_tex_shad.add_attribute("tex_coord");
+	pass_tex_shad.link_program();
+
 	ShaderProgram& gray_shad = sh.access_program(SH_GRAY);
 	gray_shad.create_program();
 	gray_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
@@ -83,6 +91,14 @@ void ViewState::create_shaders() {
 	gray_shad.add_attribute("in_position");
 	gray_shad.add_attribute("tex_coord");
 	gray_shad.link_program();
+
+	ShaderProgram& occ_shad = sh.access_program(SH_OCCLUDER);
+	occ_shad.create_program();
+	occ_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
+	occ_shad.add_shader(GL_FRAGMENT_SHADER, "occluder.frag");
+	occ_shad.add_attribute("in_position");
+	occ_shad.add_attribute("tex_coord");
+	occ_shad.link_program();
 
 	// ground_shad.create_program();
 	// ground_shad.add_shader(GL_VERTEX_SHADER, "ground.vert");
@@ -111,6 +127,7 @@ void ViewState::load_images() {
 	std::cerr << "Beginning to load textures" << std::endl;
 
 	load_texture_image(TH_GRUMP, "images/arin_grump.png");
+	load_texture_empty(TH_OCCLUDER, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void ViewState::unload_images() {
@@ -130,6 +147,10 @@ void ViewState::bind_texture(TH_tex_id tex_id) {
 
 void ViewState::load_texture_image(TH_tex_id tex_id, const char * file_name) {
 	th.access_texture(tex_id).load_file(file_name);
+}
+
+void ViewState::load_texture_empty(TH_tex_id tex_id, unsigned int width, unsigned int height) {
+	th.access_texture(tex_id).load_empty(width, height);
 }
 
 GLuint ViewState::get_texture_name(TH_tex_id tex_id) {
