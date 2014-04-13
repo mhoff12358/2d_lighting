@@ -72,14 +72,6 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	glGenFramebuffers(1, &occluder_frame_buffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 
-	//Depth stuff?
-	// GLuint depthrenderbuffer;
-	// glGenRenderbuffers(1, &depthrenderbuffer);
-	// glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
-	// glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 512, 512);
-	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
-
-
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_OCCLUDER), 0);
 	glDrawBuffer(GL_NONE);
 
@@ -116,20 +108,27 @@ void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture) {
 
 void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
 	glPushMatrix();
-	glScalef(1000, 800, 1);
+	glScalef(100, 100, 1);
 	draw_texture(shader_id, TH_GRUMP);
 	glPopMatrix();
 }
 
 void ViewDrawer::draw_screen() {
 	GLuint error;
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//Prerender to an occlusion texture
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 	glDrawBuffers(1, &gca0);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glPushMatrix();
+	glScalef(1, -1, 1);
+	glTranslatef(0, -800, 0);
 	draw_grumps(SH_OCCLUDER);
+	glPopMatrix();
+
 	error = glGetError();
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cerr << "INCOMPLETE FRAME BUFFER STATUS DURING BUILD" << std::endl;
@@ -139,26 +138,17 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Actual render to screen
-	glPushMatrix();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glScalef(1000.0, 800.0, 1.0);
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glPushMatrix();
+	glScalef(1000, 800, 1);
 	draw_texture(SH_PASS, TH_OCCLUDER);
-
 	glPopMatrix();
+
 	error = glGetError();
 	if (error != 0) {
 		std::cerr << "GL ERROR DRAWING FINAL TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
 	}
-
-	glActiveTexture(GL_TEXTURE0);
-	game.get_state().bind_texture(TH_GRUMP);
-
-	glUseProgram(0);
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0, 0.0); glVertex3f(0.0, 100.0, -1.0);
-		glTexCoord2f(1.0, 0.0); glVertex3f(100.0, 100.0, -1.0);
-		glTexCoord2f(1.0, 1.0); glVertex3f(100.0, 0.0, -1.0);
-		glTexCoord2f(0.0, 1.0); glVertex3f(0.0, 0.0, -1.0);
-	glEnd();
 }

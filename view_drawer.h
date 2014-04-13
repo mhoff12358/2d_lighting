@@ -24,6 +24,7 @@ private:
 	//Temporary stuff, should be moved out into actors
 	GLuint grump_vbo;
 	GLuint occluder_frame_buffer;
+	GLuint shadow_frame_buffer;
 
 public:
 	ViewDrawer(Game& g) : game(g) {}
