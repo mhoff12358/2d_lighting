@@ -22,6 +22,7 @@ enum SH_prog_id {
 	SH_PASS_TEX,
 	SH_GRAY,
 	SH_OCCLUDER,
+	SH_SHADOW_COMPRESS,
 	SH_NUM_SHAD
 };
 

@@ -54,6 +54,7 @@ public:
 	void bind_texture(TH_tex_id);
 	void load_texture_image(TH_tex_id, const char *);
 	void load_texture_empty(TH_tex_id, unsigned int, unsigned int);
+	void load_texture_empty(TH_tex_id, unsigned int);
 	GLuint get_texture_name(TH_tex_id);
 
 	void use_program(SH_prog_id);

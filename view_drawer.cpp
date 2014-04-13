@@ -30,6 +30,7 @@ void ViewDrawer::initialize() {
 
 	//Enables textures and alpha
 	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_1D);
 	glEnable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -71,16 +72,19 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	//Generate the frame buffer, texture, 
 	glGenFramebuffers(1, &occluder_frame_buffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
-
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_OCCLUDER), 0);
 	glDrawBuffer(GL_NONE);
-
-	GLuint error = glGetError();
-	if (error != 0) {
-		std::cerr << "GL ERROR BUILDING FRAMEBUFFER: " << error << " " << gluErrorString(error) << std::endl;
-	}
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "INCOMPLETE FRAME BUFFER STATUS DURING BUILD" << std::endl;
+		std::cerr << "INCOMPLETE OCCLUSION FRAME BUFFER STATUS DURING BUILD" << std::endl;
+	}
+
+	game.get_state().bind_texture(TH_SHADOW);
+	glGenFramebuffers(1, &shadow_frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_SHADOW), 0);
+	glDrawBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "INCOMPLETE SHADOW FRAME BUFFER STATUS DURING BUILD" << std::endl;
 	}
 }
 
@@ -115,10 +119,10 @@ void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
 
 void ViewDrawer::draw_screen() {
 	GLuint error;
+	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
 	//Prerender to an occlusion texture
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
-	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 	glDrawBuffers(1, &gca0);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -136,6 +140,17 @@ void ViewDrawer::draw_screen() {
 	if (error != 0) {
 		std::cerr << "GL ERROR DRAWING FRAMEBUFFER: " << error << " " << gluErrorString(error) << std::endl;
 	}
+
+	//Render the occlusion texture to the shadow texture
+	// glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	// glDrawBuffers(1, &gca0);
+	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	// glClear(GL_COLOR_BUFFER_BIT);
+
+	// glPushMatrix();
+	// glScalef(1000, 1, 1);
+	// draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
+	// glPopMatrix();
 
 	//Actual render to screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

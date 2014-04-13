@@ -100,15 +100,13 @@ void ViewState::create_shaders() {
 	occ_shad.add_attribute("tex_coord");
 	occ_shad.link_program();
 
-	// ground_shad.create_program();
-	// ground_shad.add_shader(GL_VERTEX_SHADER, "ground.vert");
-	// ground_shad.add_shader(GL_FRAGMENT_SHADER, "ground.frag");
-	// ground_shad.add_attribute("in_position");
-	// ground_shad.add_attribute("in_color");
-	// ground_shad.add_attribute("in_normal");
-	// ground_shad.add_attribute("frag_color");
-	// // glBindFragDataLocation(ground_shad.get_program(), 0, "frag_color");
-	// ground_shad.link_program();
+	ShaderProgram& comp_shad = sh.access_program(SH_SHADOW_COMPRESS);
+	comp_shad.create_program();
+	comp_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
+	comp_shad.add_shader(GL_FRAGMENT_SHADER, "shadow_compress.frag");
+	comp_shad.add_attribute("in_position");
+	comp_shad.add_attribute("tex_coord");
+	comp_shad.link_program();
 }
 
 int ViewState::check_valid() {
@@ -128,6 +126,7 @@ void ViewState::load_images() {
 
 	load_texture_image(TH_GRUMP, "images/arin_grump.png");
 	load_texture_empty(TH_OCCLUDER, SCREEN_WIDTH, SCREEN_HEIGHT);
+	load_texture_empty(TH_SHADOW, SCREEN_WIDTH);
 }
 
 void ViewState::unload_images() {
@@ -151,6 +150,10 @@ void ViewState::load_texture_image(TH_tex_id tex_id, const char * file_name) {
 
 void ViewState::load_texture_empty(TH_tex_id tex_id, unsigned int width, unsigned int height) {
 	th.access_texture(tex_id).load_empty(width, height);
+}
+
+void ViewState::load_texture_empty(TH_tex_id tex_id, unsigned int width) {
+	th.access_texture(tex_id).load_empty(width);
 }
 
 GLuint ViewState::get_texture_name(TH_tex_id tex_id) {

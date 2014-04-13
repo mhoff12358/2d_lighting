@@ -10,7 +10,11 @@ Texture::~Texture() {
 }
 
 void Texture::bind() {
-	glBindTexture(GL_TEXTURE_2D, name);
+	if (mode == 1) {
+		glBindTexture(GL_TEXTURE_1D, name);
+	} else {
+		glBindTexture(GL_TEXTURE_2D, name);
+	}
 }
 
 void Texture::load_file(const char * file_name) {
@@ -28,6 +32,7 @@ void Texture::load_file(const char * file_name) {
 }
 
 void Texture::load_empty(unsigned int width, unsigned int height) {
+	mode = 2;
 	bind();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -35,8 +40,15 @@ void Texture::load_empty(unsigned int width, unsigned int height) {
 }
 
 void Texture::load_empty(unsigned int width) {
+	mode = 1;
 	bind();
-	glTexImage1D(GL_TEXTURE_1D, 0, GL_RED, width, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void Texture::set_mode(unsigned int m) {
+	mode = m;
 }
 
 unsigned int Texture::get_width() {

@@ -18,13 +18,14 @@ using std::string;
 enum TH_tex_id {
 	TH_GRUMP,
 	TH_OCCLUDER,
-	TH_SHADOWS,
+	TH_SHADOW,
 	TH_NUM_TEX
 };
 
 class Texture {
 private:
 	GLuint name;
+	unsigned int mode = 2;
 	array<unsigned int, 2> size;
 
 public:
@@ -39,6 +40,8 @@ public:
 	GLuint get_name();
 	unsigned int get_width();
 	unsigned int get_height();
+
+	void set_mode(unsigned int);
 };
 
 class TextureHandler {
