@@ -149,8 +149,8 @@ void ViewDrawer::draw_screen() {
 
 	//Render the occlusion texture to the shadow texture
 	glViewport(0, 0, 1000, 800);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// glDrawBuffers(1, &gca0);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	glDrawBuffers(1, &gca0);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -166,16 +166,16 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Actual render to screen
-	// glViewport(0, 0, 1000, 800);
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, 1000, 800);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// glPushMatrix();
-	// glScalef(1000, 800, 1);
-	// draw_texture(SH_TEX_1_PASS, TH_SHADOW);
-	// // draw_texture(SH_PASS, TH_OCCLUDER);
-	// glPopMatrix();
+	glPushMatrix();
+	glScalef(1000, 800, 1);
+	draw_texture(SH_TEX_1_PASS, TH_SHADOW);
+	// draw_texture(SH_PASS, TH_OCCLUDER);
+	glPopMatrix();
 
 	error = glGetError();
 	if (error != 0) {
