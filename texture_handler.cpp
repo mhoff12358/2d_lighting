@@ -2,11 +2,22 @@
 #include <iostream>
 
 Texture::Texture() {
-	glGenTextures(1, &name);
 }
 
 Texture::~Texture() {
 	glDeleteTextures(1, &name);
+}
+
+void Texture::gen_texture() {
+	glGenTextures(1, &name);
+	std::cerr << "Creating texture name: " << name << std::endl;
+	if (name == 0) {
+		GLuint error;
+		error = glGetError();
+		if (error != 0) {
+			std::cerr << "GL ERROR CREATING TEXTURE: " << error << " " << gluErrorString(error) << std::endl;
+		}
+	}
 }
 
 void Texture::bind() {

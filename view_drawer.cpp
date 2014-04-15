@@ -68,6 +68,15 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	};
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*grump_vbo_num*(3+2), vals, GL_STATIC_DRAW);
+	
+	// game.get_state().bind_texture(TH_SHADOW);
+	glGenFramebuffers(1, &shadow_frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_SHADOW), 0);
+	glDrawBuffer(GL_NONE);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "INCOMPLETE SHADOW FRAME BUFFER STATUS DURING BUILD" << std::endl;
+	}
 
 	//Generate the frame buffer, texture, 
 	glGenFramebuffers(1, &occluder_frame_buffer);
@@ -76,15 +85,6 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	glDrawBuffer(GL_NONE);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cerr << "INCOMPLETE OCCLUSION FRAME BUFFER STATUS DURING BUILD" << std::endl;
-	}
-
-	game.get_state().bind_texture(TH_SHADOW);
-	glGenFramebuffers(1, &shadow_frame_buffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, game.get_state().get_texture_name(TH_SHADOW), 0);
-	glDrawBuffer(GL_NONE);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "INCOMPLETE SHADOW FRAME BUFFER STATUS DURING BUILD" << std::endl;
 	}
 }
 
@@ -142,24 +142,29 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Render the occlusion texture to the shadow texture
-	// glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
-	// glDrawBuffers(1, &gca0);
-	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0, 0, 1000, 1);
+	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
+	glDrawBuffers(1, &gca0);
+	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
-	// glPushMatrix();
-	// glScalef(1000, 1, 1);
-	// draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
-	// glPopMatrix();
+	glPushMatrix();
+	glScalef(1, -1, 1);
+	glTranslatef(0, -1, 0);
+	glScalef(1000, 1, 1);
+	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
+	glPopMatrix();
 
 	//Actual render to screen
+	glViewport(0, 0, 1000, 800);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glPushMatrix();
 	glScalef(1000, 800, 1);
-	draw_texture(SH_PASS, TH_OCCLUDER);
+	draw_texture(SH_TEX_1_PASS, TH_SHADOW);
+	// draw_texture(SH_PASS, TH_OCCLUDER);
 	glPopMatrix();
 
 	error = glGetError();

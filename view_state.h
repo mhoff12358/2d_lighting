@@ -52,6 +52,7 @@ public:
 	int screen_height();
 
 	void bind_texture(TH_tex_id);
+	void gen_texture(TH_tex_id);
 	void load_texture_image(TH_tex_id, const char *);
 	void load_texture_empty(TH_tex_id, unsigned int, unsigned int);
 	void load_texture_empty(TH_tex_id, unsigned int);

@@ -20,6 +20,7 @@ using std::array;
 enum SH_prog_id {
 	SH_PASS,
 	SH_PASS_TEX,
+	SH_TEX_1_PASS,
 	SH_GRAY,
 	SH_OCCLUDER,
 	SH_SHADOW_COMPRESS,

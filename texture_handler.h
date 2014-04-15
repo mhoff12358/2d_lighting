@@ -32,6 +32,8 @@ public:
 	Texture();
 	~Texture();
 
+	void gen_texture();
+
 	void load_file(const char* file_name);
 	void load_empty(unsigned int, unsigned int);
 	void load_empty(unsigned int);
