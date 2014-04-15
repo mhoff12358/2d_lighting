@@ -115,6 +115,12 @@ void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
 	glScalef(100, 100, 1);
 	draw_texture(shader_id, TH_GRUMP);
 	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(300, 100, 0);
+	glScalef(200, 200, 1);
+	draw_texture(shader_id, TH_GRUMP);
+	glPopMatrix();
 }
 
 void ViewDrawer::draw_screen() {
@@ -142,30 +148,34 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Render the occlusion texture to the shadow texture
-	glViewport(0, 0, 1000, 1);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
-	glDrawBuffers(1, &gca0);
+	glViewport(0, 0, 1000, 800);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// glDrawBuffers(1, &gca0);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	glScalef(1, -1, 1);
-	glTranslatef(0, -1, 0);
-	glScalef(1000, 1, 1);
+	glScalef(1000, 800, 1);
+	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), 800.0);
 	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
+	// draw_texture(SH_PASS, TH_GRUMP);
 	glPopMatrix();
+	error = glGetError();
+	if (error != 0) {
+		std::cerr << "GL ERROR DRAWING SHAODWMAP TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
+	}
 
 	//Actual render to screen
-	glViewport(0, 0, 1000, 800);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// glViewport(0, 0, 1000, 800);
+	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	glPushMatrix();
-	glScalef(1000, 800, 1);
-	draw_texture(SH_TEX_1_PASS, TH_SHADOW);
-	// draw_texture(SH_PASS, TH_OCCLUDER);
-	glPopMatrix();
+	// glPushMatrix();
+	// glScalef(1000, 800, 1);
+	// draw_texture(SH_TEX_1_PASS, TH_SHADOW);
+	// // draw_texture(SH_PASS, TH_OCCLUDER);
+	// glPopMatrix();
 
 	error = glGetError();
 	if (error != 0) {

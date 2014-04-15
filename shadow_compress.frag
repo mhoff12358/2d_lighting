@@ -16,5 +16,6 @@ void main()
    		distance = min(distance, cd+is);
    	}
 
-   	final_color = vec4(0.5, 0.0, 0.5, 1.0);
+   	//final_color = vec4(resolution/1600, 0.0, 1.0, 1.0);
+   	final_color = vec4(distance, distance, distance, 1.0);
 }

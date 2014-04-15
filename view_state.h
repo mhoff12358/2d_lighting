@@ -60,6 +60,7 @@ public:
 
 	void use_program(SH_prog_id);
 	GLuint get_uniform_loc(SH_prog_id, const char *);
+	GLuint get_program(SH_prog_id);
 	vector<pair<unsigned int, string>>& get_shader_attrs(SH_prog_id);
 };
 

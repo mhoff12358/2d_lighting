@@ -179,6 +179,10 @@ void ViewState::use_program(SH_prog_id shad_id) {
 	sh.access_program(shad_id).use();
 }
 
+GLuint ViewState::get_program(SH_prog_id shad_id) {
+	return sh.access_program(shad_id).get_program();
+}
+
 GLuint ViewState::get_uniform_loc(SH_prog_id shad_id, const char * uniform_name) {
 	return glGetUniformLocation(sh.access_program(shad_id).get_program(), uniform_name);
 }
