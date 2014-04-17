@@ -13,8 +13,6 @@
 #include "texture_handler.h"
 #include "shader.h"
 
-#define grump_vbo_num 4 //Number of vertices
-
 class Game;
 
 class ViewDrawer {
@@ -23,6 +21,8 @@ private:
 
 	//Temporary stuff, should be moved out into actors
 	GLuint grump_vbo;
+	GLuint square1_vbo;
+	GLuint square4_vbo;
 	GLuint occluder_frame_buffer;
 	GLuint shadow_frame_buffer;
 
@@ -37,8 +37,8 @@ public:
 	void projection_set_screen(int, int);
 
 	void draw_screen();
-	void draw_texture(SH_prog_id shader, TH_tex_id texture);
-	void draw_grumps(SH_prog_id);
+	void draw_texture(SH_prog_id shader, TH_tex_id texture, GLuint, unsigned int);
+	void draw_grumps(SH_prog_id, GLuint, unsigned int);
 	void draw_light(SH_prog_id, TH_tex_id);
 };
 

@@ -52,10 +52,10 @@ void ViewDrawer::projection_set_screen(int width, int height) {
 }
 
 void ViewDrawer::TEMP_VBO_SHIT() {
-	glGenBuffers(1, &grump_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, grump_vbo);
+	glGenBuffers(1, &square1_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, square1_vbo);
 
-	float vals[grump_vbo_num*(3+2)] = {
+	float sq1vals[4*(3+2)] = {
 		//Vertex locations
 		-0.5,-0.5, -1.0,
 		 0.5,-0.5, -1.0,
@@ -68,7 +68,50 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 		0.0, 0.0,
 	};
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*grump_vbo_num*(3+2), vals, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*(3+2), sq1vals, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &square4_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, square4_vbo);
+
+	float sq4vals[4*4*(3+2)] = {
+		//Vertex locations
+		//Bottom left, bottom right, top left, top right
+		-0.5,-0.5, -1.0,
+		 0.0,-0.5, -1.0,
+		 0.0, 0.0, -1.0,
+		-0.5, 0.0, -1.0,
+		 0.0,-0.5, -1.0,
+		 0.5,-0.5, -1.0,
+		 0.5, 0.0, -1.0,
+		 0.0, 0.0, -1.0,
+		-0.5, 0.0, -1.0,
+		 0.0, 0.0, -1.0,
+		 0.0, 0.5, -1.0,
+		-0.5, 0.5, -1.0,
+		 0.0, 0.0, -1.0,
+		 0.5, 0.0, -1.0,
+		 0.5, 0.5, -1.0,
+		 0.0, 0.5, -1.0,
+		 //Texture locations
+		0.0, 1.0,
+		0.5, 1.0,
+		0.5, 0.5,
+		0.0, 0.5,
+		0.5, 1.0,
+		1.0, 1.0,
+		1.0, 0.5,
+		0.5, 0.5,
+		0.0, 0.5,
+		0.5, 0.5,
+		0.5, 0.0,
+		0.0, 0.0,
+		0.5, 0.5,
+		1.0, 0.5,
+		1.0, 0.0,
+		0.5, 0.0,
+	};
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*4*(3+2), sq4vals, GL_STATIC_DRAW);
 	
 	// game.get_state().bind_texture(TH_SHADOW);
 	glGenFramebuffers(1, &shadow_frame_buffer);
@@ -89,7 +132,7 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	}
 }
 
-void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture) {
+void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo, unsigned int vbo_num) {
 	game.get_state().use_program(shader);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -103,12 +146,12 @@ void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture) {
 	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "proj_matrix"), 1, false, promat);
 	glUniform1i(game.get_state().get_uniform_loc(shader, "in_texture"), 1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, grump_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
 	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[1].first);
-	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[1].first, 2, GL_FLOAT, GL_FALSE, 0, (char*)NULL+sizeof(float)*4*3);
-	glDrawArrays(GL_QUADS, 0, 4);
+	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[1].first, 2, GL_FLOAT, GL_FALSE, 0, (char*)NULL+sizeof(float)*vbo_num*3);
+	glDrawArrays(GL_QUADS, 0, vbo_num);
 }
 
 void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
@@ -126,13 +169,13 @@ void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
 	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), 1.0, 1.0, 1.0);
 	glUniform1i(game.get_state().get_uniform_loc(shader, "shadow_texture"), 1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, grump_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, square1_vbo);
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
 	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glDrawArrays(GL_QUADS, 0, 4);
 }
 
-void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
+void ViewDrawer::draw_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
 	// glPushMatrix();
 	// glTranslatef(400, 200, 0);
 	// glScalef(100, 100, 1);
@@ -142,7 +185,7 @@ void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
 	glPushMatrix();
 	glTranslatef(-300, -300, 0);
 	glScalef(200, 200, 1);
-	draw_texture(shader_id, TH_GRUMP);
+	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 
 	// glPushMatrix();
@@ -160,7 +203,7 @@ void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
 	glPushMatrix();
 	glTranslatef(250, 0, 0);
 	glScalef(200, 200, 1);
-	draw_texture(shader_id, TH_GRUMP);
+	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 }
 
@@ -177,7 +220,7 @@ void ViewDrawer::draw_screen() {
 
 	glPushMatrix();
 	// glScalef(1, -1, 1);
-	draw_grumps(SH_OCCLUDER);
+	draw_grumps(SH_OCCLUDER, square4_vbo, 16);
 	glPopMatrix();
 
 	error = glGetError();
@@ -198,8 +241,8 @@ void ViewDrawer::draw_screen() {
 	glPushMatrix();
 	glScalef(1024, 1024, 1);
 	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), 800.0);
-	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
-	// draw_texture(SH_PASS, TH_GRUMP);
+	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER, square1_vbo, 4);
+	// draw_texture(SH_PASS, TH_GRUMP, square1_vbo, 4);
 	glPopMatrix();
 	error = glGetError();
 	if (error != 0) {
@@ -214,11 +257,11 @@ void ViewDrawer::draw_screen() {
 	
 	glPushMatrix();
 	glScalef(800, 800, 1);
-	// draw_texture(SH_TEX_1_PASS, TH_SHADOW);
-	// draw_texture(SH_PASS, TH_OCCLUDER);
+	// draw_texture(SH_TEX_1_PASS, TH_SHADOW, square1_vbo, 4);
+	// draw_texture(SH_PASS, TH_OCCLUDER, square1_vbo, 4);
 	draw_light(SH_SHADOW_LIGHT, TH_SHADOW);
 	glPopMatrix();
-	draw_grumps(SH_PASS);
+	draw_grumps(SH_PASS, square4_vbo, 16);
 
 	error = glGetError();
 	if (error != 0) {
