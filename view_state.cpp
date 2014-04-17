@@ -92,6 +92,14 @@ void ViewState::create_shaders() {
 	tex_1_pass_shad.add_attribute("tex_coord");
 	tex_1_pass_shad.link_program();
 
+	ShaderProgram& unroll_pass_shad = sh.access_program(SH_UNROLL_PASS);
+	unroll_pass_shad.create_program();
+	unroll_pass_shad.add_shader(GL_VERTEX_SHADER, "unroll_polar.vert");
+	unroll_pass_shad.add_shader(GL_FRAGMENT_SHADER, "tex1pass.frag");
+	unroll_pass_shad.add_attribute("in_position");
+	unroll_pass_shad.add_attribute("tex_coord");
+	unroll_pass_shad.link_program();
+
 	ShaderProgram& gray_shad = sh.access_program(SH_GRAY);
 	gray_shad.create_program();
 	gray_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
@@ -102,7 +110,7 @@ void ViewState::create_shaders() {
 
 	ShaderProgram& occ_shad = sh.access_program(SH_OCCLUDER);
 	occ_shad.create_program();
-	occ_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
+	occ_shad.add_shader(GL_VERTEX_SHADER, "unroll_polar.vert");
 	occ_shad.add_shader(GL_FRAGMENT_SHADER, "occluder.frag");
 	occ_shad.add_attribute("in_position");
 	occ_shad.add_attribute("tex_coord");
@@ -115,6 +123,13 @@ void ViewState::create_shaders() {
 	comp_shad.add_attribute("in_position");
 	comp_shad.add_attribute("tex_coord");
 	comp_shad.link_program();
+
+	ShaderProgram& sl_shad = sh.access_program(SH_SHADOW_LIGHT);
+	sl_shad.create_program();
+	sl_shad.add_shader(GL_VERTEX_SHADER, "pass_color.vert");
+	sl_shad.add_shader(GL_FRAGMENT_SHADER, "shadow_light.frag");
+	sl_shad.add_attribute("in_position");
+	sl_shad.link_program();
 }
 
 int ViewState::check_valid() {
@@ -136,8 +151,8 @@ void ViewState::load_images() {
 	gen_texture(TH_SHADOW);
 
 	load_texture_image(TH_GRUMP, "images/arin_grump.png");
-	load_texture_empty(TH_OCCLUDER, SCREEN_WIDTH, SCREEN_HEIGHT);
-	load_texture_empty(TH_SHADOW, SCREEN_WIDTH);
+	load_texture_empty(TH_OCCLUDER, 1024, 1024);
+	load_texture_empty(TH_SHADOW, 1024);
 }
 
 void ViewState::unload_images() {

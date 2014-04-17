@@ -9,5 +9,5 @@ out vec2 frag_coord;
 void main()
 {
 	gl_Position = proj_matrix*vec4(in_position, 1.0);
-	frag_coord = vec2(in_position.x, in_position.y);
+	frag_coord = vec2(in_position.x*2, in_position.y*2);
 }

@@ -34,11 +34,12 @@ public:
 	void initialize();
 	void deinitialize();
 
-	void projection_set_screen();
+	void projection_set_screen(int, int);
 
 	void draw_screen();
 	void draw_texture(SH_prog_id shader, TH_tex_id texture);
 	void draw_grumps(SH_prog_id);
+	void draw_light(SH_prog_id, TH_tex_id);
 };
 
 #endif

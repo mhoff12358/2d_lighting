@@ -35,7 +35,7 @@ void ViewDrawer::initialize() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	projection_set_screen();
+	projection_set_screen(1000, 800);
 
 	// SDL_GL_SetSwapInterval(1);
 }
@@ -43,11 +43,12 @@ void ViewDrawer::initialize() {
 void ViewDrawer::deinitialize() {
 }
 
-void ViewDrawer::projection_set_screen() {
+void ViewDrawer::projection_set_screen(int width, int height) {
 	//Set the camera to an orthogonal projection so that it is the whole screen 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, game.get_state().screen_width(), 0, game.get_state().screen_height(), .1, 10);
+	glOrtho(-width/2, width/2, -height/2, height/2, .1, 10);
+	glViewport(0, 0, width, height);
 }
 
 void ViewDrawer::TEMP_VBO_SHIT() {
@@ -56,10 +57,10 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 
 	float vals[grump_vbo_num*(3+2)] = {
 		//Vertex locations
-		0.0, 0.0, -1.0,
-		1.0, 0.0, -1.0,
-		1.0, 1.0, -1.0,
-		0.0, 1.0, -1.0,
+		-0.5,-0.5, -1.0,
+		 0.5,-0.5, -1.0,
+		 0.5, 0.5, -1.0,
+		-0.5, 0.5, -1.0,
 		//Texture locations
 		0.0, 1.0,
 		1.0, 1.0,
@@ -110,14 +111,54 @@ void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture) {
 	glDrawArrays(GL_QUADS, 0, 4);
 }
 
+void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
+	game.get_state().use_program(shader);
+
+	glActiveTexture(GL_TEXTURE1);
+	game.get_state().bind_texture(shadow_map);
+
+	GLfloat mvmat[16], promat[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
+	glGetFloatv(GL_PROJECTION_MATRIX, promat);
+
+	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "view_matrix"), 1, false, mvmat);
+	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "proj_matrix"), 1, false, promat);
+	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), 1.0, 1.0, 1.0);
+	glUniform1i(game.get_state().get_uniform_loc(shader, "shadow_texture"), 1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, grump_vbo);
+	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
+	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glDrawArrays(GL_QUADS, 0, 4);
+}
+
 void ViewDrawer::draw_grumps(SH_prog_id shader_id) {
+	// glPushMatrix();
+	// glTranslatef(400, 200, 0);
+	// glScalef(100, 100, 1);
+	// draw_texture(shader_id, TH_GRUMP);
+	// glPopMatrix();
+
 	glPushMatrix();
-	glScalef(100, 100, 1);
+	glTranslatef(-300, -300, 0);
+	glScalef(200, 200, 1);
 	draw_texture(shader_id, TH_GRUMP);
 	glPopMatrix();
 
+	// glPushMatrix();
+	// glTranslatef(-250, 100, 0);
+	// glScalef(50, 250, 1);
+	// draw_texture(shader_id, TH_GRUMP);
+	// glPopMatrix();
+
+	// glPushMatrix();
+	// glTranslatef(350, -200, 0);
+	// glScalef(50, 250, 1);
+	// draw_texture(shader_id, TH_GRUMP);
+	// glPopMatrix();
+
 	glPushMatrix();
-	glTranslatef(300, 100, 0);
+	glTranslatef(250, 0, 0);
 	glScalef(200, 200, 1);
 	draw_texture(shader_id, TH_GRUMP);
 	glPopMatrix();
@@ -128,14 +169,14 @@ void ViewDrawer::draw_screen() {
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
 	//Prerender to an occlusion texture
+	projection_set_screen(1024, 1024);
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 	glDrawBuffers(1, &gca0);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	glScalef(1, -1, 1);
-	glTranslatef(0, -800, 0);
+	// glScalef(1, -1, 1);
 	draw_grumps(SH_OCCLUDER);
 	glPopMatrix();
 
@@ -148,14 +189,14 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Render the occlusion texture to the shadow texture
-	glViewport(0, 0, 1000, 800);
+	// projection_set_screen(1024, 1);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
 	glDrawBuffers(1, &gca0);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	glScalef(1000, 800, 1);
+	glScalef(1024, 1024, 1);
 	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), 800.0);
 	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER);
 	// draw_texture(SH_PASS, TH_GRUMP);
@@ -166,16 +207,18 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Actual render to screen
-	glViewport(0, 0, 1000, 800);
+	projection_set_screen(1000, 800);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glPushMatrix();
-	glScalef(1000, 800, 1);
-	draw_texture(SH_TEX_1_PASS, TH_SHADOW);
+	glScalef(800, 800, 1);
+	// draw_texture(SH_TEX_1_PASS, TH_SHADOW);
 	// draw_texture(SH_PASS, TH_OCCLUDER);
+	draw_light(SH_SHADOW_LIGHT, TH_SHADOW);
 	glPopMatrix();
+	draw_grumps(SH_PASS);
 
 	error = glGetError();
 	if (error != 0) {

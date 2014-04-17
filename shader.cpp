@@ -6,10 +6,15 @@ int ShaderProgram::load_shader_file(const string& file_name, string& file_conten
 
 	if (src_file.is_open()) {
 		//The file successfully opened, load the file's contents
-		src_file.seekg(0, std::ios::end);
-		file_contents.resize(src_file.tellg());
-		src_file.seekg(0, std::ios::beg);
-		src_file.read(&file_contents[0],file_contents.size());
+		// src_file.seekg(0, std::ios::end);
+		// file_contents.resize(src_file.tellg());
+		// src_file.seekg(0, std::ios::beg);
+		// src_file.read(&file_contents[0],file_contents.size());
+		// src_file.close();
+		string temp;
+		while (getline(src_file, temp)) {
+			file_contents.append(temp).append("\n");
+		}
 		src_file.close();
 	} else {
 		//The file could not be opened report an error.
@@ -52,6 +57,7 @@ int ShaderProgram::add_shader(const GLenum shader_type, const string& file_name)
 		//Log the error (currently just print)
 		std::cout << "Compilation error in " << file_name << std::endl;
 		std::cout << error_msg.data() << std::endl;
+		std::cout << "Outputting source: " << std::endl << src << std::endl;
 
 		glDeleteShader(shader);
 		return 2;
