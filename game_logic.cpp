@@ -3,6 +3,17 @@
 
 #include "main.h"
 
+
+void set_rgb(ViewDrawer& vd, float r, float g, float b) {
+	vd.light_color[0] = r;
+	vd.light_color[1] = g;
+	vd.light_color[2] = b;
+}
+
+float mod(float a, float b) {
+	return a-floor(a/b)*b;
+}
+
 void GameLogic::update_world() {
 	unsigned int time_diff = clock() - game_clock;
 	game_clock += time_diff;
@@ -10,7 +21,6 @@ void GameLogic::update_world() {
 	float time_scale = ((float)time_diff)/CLOCKS_PER_SEC;
 
 	IOController& ioc = game.get_controller();
-	bool moved = false;
 	#define move_scale 80.0
 	if (ioc.get_keypressed(SDLK_d)) {
 		game.get_drawer().light_x += time_scale*move_scale;
@@ -31,16 +41,18 @@ void GameLogic::update_world() {
 	if (ioc.get_keypressed(SDLK_LEFTBRACKET)) {
 		game.get_drawer().light_size += -time_scale*move_scale*4;
 	}
-	// for (int dir = 0; dir < 4; dir++) {
-	// 	if (ioc.get_keypressed(ioc.MOVE_KEYS[dir])) {
-	// 		player_loc[0] += time_scale*move_scale*cos(M_PI*(player_ori[0]-90*dir)/180);
-	// 		player_loc[1] += time_scale*move_scale*sin(M_PI*(player_ori[0]-90*dir)/180);
-	// 		moved = true;
-	// 	}
-	// }
-	// if (moved) {
-	// 	player_loc[2] = game.get_terrain().get_height(player_loc[0], player_loc[1], 0.06f);
-	// }
+
+	int h = ((float)game_clock/CLOCKS_PER_SEC*80.0);
+
+	float c = 1.0;
+	float x = (1-fabs(mod((float)h/60.0, 2)-1));
+
+	if (h < 60) set_rgb(game.get_drawer(), c, x, 0);
+	else if (h < 120) set_rgb(game.get_drawer(), x, c, 0);
+	else if (h < 180) set_rgb(game.get_drawer(), 0, c, x);
+	else if (h < 240) set_rgb(game.get_drawer(), 0, x, c);
+	else if (h < 300) set_rgb(game.get_drawer(), x, 0, c);
+	else set_rgb(game.get_drawer(), c, 0, x);
 }
 
 void GameLogic::add_mouse_motion(array<int, 4> new_motion) {

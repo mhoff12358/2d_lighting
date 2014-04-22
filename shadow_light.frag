@@ -19,6 +19,7 @@ void main()
 	if (distance > texture1D(shadow_texture, theta)) {
 		final_color = vec4(0.0, 0.0, 0.0, 0.0);
 	} else {
-		final_color = vec4(1.0-distance, 1.0-distance, 1.0-distance, 1.0);
+		//final_color = vec4(1.0-distance, 1.0-distance, 1.0-distance, 1.0-distance);
+		final_color = vec4(light_color, 1.0-distance);
 	}
 }

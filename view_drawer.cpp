@@ -31,7 +31,7 @@ void ViewDrawer::initialize() {
 	//Enables textures and alpha
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_TEXTURE_1D);
-	glEnable(GL_ALPHA_TEST);
+	// glEnable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -166,7 +166,7 @@ void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
 
 	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "view_matrix"), 1, false, mvmat);
 	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "proj_matrix"), 1, false, promat);
-	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), 1.0, 1.0, 1.0);
+	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), light_color[0], light_color[1], light_color[2]);
 	glUniform1i(game.get_state().get_uniform_loc(shader, "shadow_texture"), 1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, square1_vbo);
@@ -256,7 +256,7 @@ void ViewDrawer::draw_screen() {
 	projection_set_screen(1000, 800);
 	glViewport(0, 0, 1000, 800);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glPushMatrix();

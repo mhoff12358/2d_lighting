@@ -10,6 +10,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "my_math.h"
+
 using std::queue;
 using std::array;
 

@@ -32,6 +32,7 @@ public:
 	float light_x = 0.0; 
 	float light_y = 0.0;
 	float light_size = 800.0;
+	array<float, 3> light_color = {{1.0, 1.0, 1.0}};
 	void TEMP_VBO_SHIT();
 
 	void initialize();
