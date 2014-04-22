@@ -29,6 +29,9 @@ private:
 public:
 	ViewDrawer(Game& g) : game(g) {}
 
+	float light_x = 0.0; 
+	float light_y = 0.0;
+	float light_size = 800.0;
 	void TEMP_VBO_SHIT();
 
 	void initialize();
