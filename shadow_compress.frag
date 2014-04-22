@@ -1,5 +1,7 @@
 #version 330
 
+#define M_PI 3.1415926535897932384626433832795
+
 uniform sampler2D in_texture;
 uniform float resolution;
 
@@ -19,13 +21,23 @@ void main()
    		//distance = min(distance, cd+is);
    	//}
 
-   	for (float y = 0.0; y < resolution; y+= 1.0) {
-   		float cd = y/resolution;
-   		if (texture2D(in_texture, vec2(frag_tex_coord.x, cd)).r < 0.5) {
-   			distance = cd;
-   			y = resolution+1.0;
-   		}
-   	}
+   	//for (float y = 0.0; y < resolution; y+= 1.0) {
+   		//float cd = y/resolution;
+   		//if (texture2D(in_texture, vec2(frag_tex_coord.x, cd)).r < 0.5) {
+   			//distance = cd;
+   			//y = resolution+1.0;
+   		//}
+   	//}
+
+      float theta = (frag_tex_coord.x*2-1)*M_PI;
+      for (float y = 0.0; y < resolution; y+= 1.0) {
+         float cd = y/resolution;
+         if (texture2D(in_texture, vec2((cd*cos(theta)+1)/2, (cd*sin(theta)+1)/2)).r < 0.5) {
+            distance = cd;
+            y = resolution+1.0;
+         }
+
+      }
 
    	final_color = vec4(distance, distance, distance, 1.0);
 }

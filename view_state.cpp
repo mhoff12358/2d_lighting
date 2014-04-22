@@ -110,7 +110,7 @@ void ViewState::create_shaders() {
 
 	ShaderProgram& occ_shad = sh.access_program(SH_OCCLUDER);
 	occ_shad.create_program();
-	occ_shad.add_shader(GL_VERTEX_SHADER, "unroll_polar.vert");
+	occ_shad.add_shader(GL_VERTEX_SHADER, "pass.vert");
 	occ_shad.add_shader(GL_FRAGMENT_SHADER, "occluder.frag");
 	occ_shad.add_attribute("in_position");
 	occ_shad.add_attribute("tex_coord");

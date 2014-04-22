@@ -271,7 +271,14 @@ void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size
 	compress_shadows();
 	
 	setup_screen_render();
-
+	
+	//Testing stuff
+	glPushMatrix();
+	glScalef(800, 800, 1);
+	// render_texture(SH_TEX_1_PASS, TH_SHADOW, square1_vbo, 4);
+	// render_texture(SH_PASS, TH_OCCLUDER, square1_vbo, 4);
+	glPopMatrix();
+	
 	glPushMatrix();
 	glTranslatef(center_loc[0], center_loc[1], 0);
 	glScalef(render_size, render_size, 1);
@@ -290,6 +297,9 @@ void ViewDrawer::draw_background() {
 }
 
 void ViewDrawer::draw_lights() {
+	// draw_light(array<float, 2>({{light_x-200, light_y}}), light_size);
+	// draw_light(array<float, 2>({{light_x+200, light_y}}), light_size);
+	// draw_light(array<float, 2>({{425+light_x, light_y}}), light_size);
 	draw_light(array<float, 2>({{light_x, light_y}}), light_size);
 }
 
