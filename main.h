@@ -23,6 +23,7 @@ public:
 	GameLogic& get_logic();
 	IOController& get_controller();
 	ViewState& get_state();
+	ViewDrawer& get_drawer();
 };
 
 #endif

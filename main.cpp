@@ -53,6 +53,10 @@ ViewState& Game::get_state() {
 	return vs;
 }
 
+ViewDrawer& Game::get_drawer() {
+	return vd;
+}
+
 int main(int argc, char ** argv) {
 	Game g;
 
