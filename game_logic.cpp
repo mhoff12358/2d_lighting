@@ -47,11 +47,11 @@ void GameLogic::update_world() {
 	float c = 1.0;
 	float x = (1-fabs(mod((float)h/60.0, 2)-1));
 
-	if (h < 60) set_rgb(game.get_drawer(), c, x, 0);
-	else if (h < 120) set_rgb(game.get_drawer(), x, c, 0);
-	else if (h < 180) set_rgb(game.get_drawer(), 0, c, x);
-	else if (h < 240) set_rgb(game.get_drawer(), 0, x, c);
-	else if (h < 300) set_rgb(game.get_drawer(), x, 0, c);
+	if (h%360 < 60) set_rgb(game.get_drawer(), c, x, 0);
+	else if (h%360 < 120) set_rgb(game.get_drawer(), x, c, 0);
+	else if (h%360 < 180) set_rgb(game.get_drawer(), 0, c, x);
+	else if (h%360 < 240) set_rgb(game.get_drawer(), 0, x, c);
+	else if (h%360 < 300) set_rgb(game.get_drawer(), x, 0, c);
 	else set_rgb(game.get_drawer(), c, 0, x);
 }
 
