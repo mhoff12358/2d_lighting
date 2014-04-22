@@ -40,10 +40,18 @@ public:
 
 	void projection_set_screen(int, int);
 
-	void draw_screen();
-	void draw_texture(SH_prog_id shader, TH_tex_id texture, GLuint, unsigned int);
-	void draw_grumps(SH_prog_id, GLuint, unsigned int);
-	void draw_light(SH_prog_id, TH_tex_id);
+	void render_texture(SH_prog_id shader, TH_tex_id texture, GLuint, unsigned int);
+	void render_grumps(SH_prog_id, GLuint, unsigned int);
+	void render_light(SH_prog_id, TH_tex_id);
+	
+	void draw_screen();	
+	void draw_light(array<float, 2> center_loc, unsigned int render_size);
+	void draw_occluders(array<float, 2> center_loc, unsigned int render_size);
+	void compress_shadows();
+	void setup_screen_render();
+	void draw_background();
+	void draw_visuals();
+	void draw_lights();
 };
 
 #endif

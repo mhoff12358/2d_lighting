@@ -48,7 +48,7 @@ void ViewDrawer::projection_set_screen(int width, int height) {
 	//Set the camera to an orthogonal projection so that it is the whole screen 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-width/2, width/2, -height/2, height/2, .1, 10);
+	glOrtho(-width/2.0, width/2.0, -height/2.0, height/2.0, .1, 10.0);
 }
 
 void ViewDrawer::TEMP_VBO_SHIT() {
@@ -132,7 +132,7 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	}
 }
 
-void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo, unsigned int vbo_num) {
+void ViewDrawer::render_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo, unsigned int vbo_num) {
 	game.get_state().use_program(shader);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -154,7 +154,7 @@ void ViewDrawer::draw_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo, 
 	glDrawArrays(GL_QUADS, 0, vbo_num);
 }
 
-void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
+void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map) {
 	game.get_state().use_program(shader);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -175,44 +175,46 @@ void ViewDrawer::draw_light(SH_prog_id shader, TH_tex_id shadow_map) {
 	glDrawArrays(GL_QUADS, 0, 4);
 }
 
-void ViewDrawer::draw_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
+void ViewDrawer::render_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
 	// glPushMatrix();
 	// glTranslatef(400, 200, 0);
 	// glScalef(100, 100, 1);
-	// draw_texture(shader_id, TH_GRUMP);
+	// render_texture(shader_id, TH_GRUMP);
 	// glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(-300, -400, 0);
 	glScalef(200, 200, 1);
-	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	render_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(250, 0, 0);
 	glScalef(100, 300, 1);
-	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	render_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(0, 150, 0);
 	glScalef(50, 50, 1);
-	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	render_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(0, 300, 0);
 	glScalef(150, 150, 1);
-	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	render_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 }
 
-void ViewDrawer::draw_screen() {
+void ViewDrawer::draw_occluders(array<float, 2> center_loc, unsigned int render_size) {
 	GLuint error;
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
-	//Prerender to an occlusion texture
-	projection_set_screen(light_size, light_size);
+	//Render all the occluder objects to the occlusion texture with the objects
+	//shifted so they center around center_loc and only rendering those in a
+	//render_size wide square
+	projection_set_screen(render_size, render_size);
 	glViewport(0, 0, 1024, 1024);
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 	glDrawBuffers(1, &gca0);
@@ -220,10 +222,8 @@ void ViewDrawer::draw_screen() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	// glScalef(1024./800., 1024./800., 1);
-	// draw_grumps(SH_OCCLUDER, square1_vbo, 4);
-	glTranslatef(-light_x, -light_y, 0);
-	draw_grumps(SH_OCCLUDER, square4_vbo, 16);
+	glTranslatef(-center_loc[0], -center_loc[1], 0);
+	render_grumps(SH_OCCLUDER, square4_vbo, 16);
 	glPopMatrix();
 
 	error = glGetError();
@@ -233,46 +233,84 @@ void ViewDrawer::draw_screen() {
 	if (error != 0) {
 		std::cerr << "GL ERROR DRAWING FRAMEBUFFER: " << error << " " << gluErrorString(error) << std::endl;
 	}
+}
 
-	//Render the occlusion texture to the shadow texture
-	// projection_set_screen(light_size, 1);
+void ViewDrawer::compress_shadows() {
+	GLuint error;
+	GLenum gca0 = GL_COLOR_ATTACHMENT0;
+
+	//Render the occlusion texture to the shadow texture by shrinking it down
+	//vertically
+	projection_set_screen(1, 1);
+	glViewport(0, 0, 1024, 1024);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
 	glDrawBuffers(1, &gca0);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	glScalef(light_size, light_size, 1);
 	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), light_size);
-	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER, square1_vbo, 4);
-	// draw_texture(SH_PASS, TH_GRUMP, square1_vbo, 4);
+	render_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER, square1_vbo, 4);
+	// render_texture(SH_PASS, TH_GRUMP, square1_vbo, 4);
 	glPopMatrix();
 	error = glGetError();
 	if (error != 0) {
 		std::cerr << "GL ERROR DRAWING SHAODWMAP TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
 	}
+}
 
-	//Actual render to screen
+void ViewDrawer::setup_screen_render() {
+	//Set up actual render to screen
 	projection_set_screen(1000, 800);
 	glViewport(0, 0, 1000, 800);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size) {
+	draw_occluders(center_loc, render_size);
+	compress_shadows();
 	
+	setup_screen_render();
+
 	glPushMatrix();
-	glScalef(800, 800, 1);
-	// draw_texture(SH_TEX_1_PASS, TH_SHADOW, square1_vbo, 4);
-	// draw_texture(SH_PASS, TH_OCCLUDER, square1_vbo, 4);
+	glTranslatef(center_loc[0], center_loc[1], 0);
+	glScalef(render_size, render_size, 1);
+	render_light(SH_SHADOW_LIGHT, TH_SHADOW);
 	glPopMatrix();
-	glPushMatrix();
-	glTranslatef(light_x, light_y, 0);
-	glScalef(light_size, light_size, 1);
-	draw_light(SH_SHADOW_LIGHT, TH_SHADOW);
-	glPopMatrix();
-	draw_grumps(SH_PASS, square1_vbo, 4);
+
+	GLuint error;
+	error = glGetError();
+	if (error != 0) {
+		std::cerr << "GL ERROR DRAWING SHADOW TEXTURE: " << error << " " << gluErrorString(error) << std::endl;
+	}
+}
+
+void ViewDrawer::draw_background() {
+
+}
+
+void ViewDrawer::draw_lights() {
+	draw_light(array<float, 2>({{light_x, light_y}}), light_size);
+}
+
+void ViewDrawer::draw_visuals() {
+	GLuint error;
+	
+	setup_screen_render();
+	render_grumps(SH_PASS, square1_vbo, 4);
 
 	error = glGetError();
 	if (error != 0) {
 		std::cerr << "GL ERROR DRAWING FINAL TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
 	}
+}
+
+void ViewDrawer::draw_screen() {
+	setup_screen_render();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	draw_background();
+	draw_lights();
+	draw_visuals();
 }
