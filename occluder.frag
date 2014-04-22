@@ -3,6 +3,7 @@
 uniform sampler2D in_texture;
 
 in vec2 frag_tex_coord;
+in float dist;
 out vec4 final_color;
 
 void main()

@@ -183,36 +183,38 @@ void ViewDrawer::draw_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_
 	// glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(-300, -300, 0);
+	glTranslatef(-300, -400, 0);
 	glScalef(200, 200, 1);
 	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
-
-	// glPushMatrix();
-	// glTranslatef(-250, 100, 0);
-	// glScalef(50, 250, 1);
-	// draw_texture(shader_id, TH_GRUMP);
-	// glPopMatrix();
-
-	// glPushMatrix();
-	// glTranslatef(350, -200, 0);
-	// glScalef(50, 250, 1);
-	// draw_texture(shader_id, TH_GRUMP);
-	// glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(250, 0, 0);
-	glScalef(200, 200, 1);
+	glScalef(100, 300, 1);
+	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(0, 150, 0);
+	glScalef(50, 50, 1);
+	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(0, 300, 0);
+	glScalef(150, 150, 1);
 	draw_texture(shader_id, TH_GRUMP, vbo, vbo_num);
 	glPopMatrix();
 }
+
+#define light_rad 1024
 
 void ViewDrawer::draw_screen() {
 	GLuint error;
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
 	//Prerender to an occlusion texture
-	projection_set_screen(1024, 1024);
+	projection_set_screen(light_rad, light_rad);
 	glBindFramebuffer(GL_FRAMEBUFFER, occluder_frame_buffer);
 	glDrawBuffers(1, &gca0);
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
@@ -220,6 +222,7 @@ void ViewDrawer::draw_screen() {
 
 	glPushMatrix();
 	// glScalef(1, -1, 1);
+	// draw_grumps(SH_OCCLUDER, square1_vbo, 4);
 	draw_grumps(SH_OCCLUDER, square4_vbo, 16);
 	glPopMatrix();
 
@@ -232,15 +235,15 @@ void ViewDrawer::draw_screen() {
 	}
 
 	//Render the occlusion texture to the shadow texture
-	// projection_set_screen(1024, 1);
+	// projection_set_screen(light_rad, 1);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
 	glDrawBuffers(1, &gca0);
 	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glPushMatrix();
-	glScalef(1024, 1024, 1);
-	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), 800.0);
+	glScalef(light_rad, light_rad, 1);
+	glProgramUniform1f(game.get_state().get_program(SH_SHADOW_COMPRESS), game.get_state().get_uniform_loc(SH_SHADOW_COMPRESS, "resolution"), light_rad);
 	draw_texture(SH_SHADOW_COMPRESS, TH_OCCLUDER, square1_vbo, 4);
 	// draw_texture(SH_PASS, TH_GRUMP, square1_vbo, 4);
 	glPopMatrix();
@@ -252,16 +255,19 @@ void ViewDrawer::draw_screen() {
 	//Actual render to screen
 	projection_set_screen(1000, 800);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	glPushMatrix();
 	glScalef(800, 800, 1);
 	// draw_texture(SH_TEX_1_PASS, TH_SHADOW, square1_vbo, 4);
 	// draw_texture(SH_PASS, TH_OCCLUDER, square1_vbo, 4);
+	glPopMatrix();
+	glPushMatrix();
+	glScalef(light_rad, light_rad, 1);
 	draw_light(SH_SHADOW_LIGHT, TH_SHADOW);
 	glPopMatrix();
-	draw_grumps(SH_PASS, square4_vbo, 16);
+	draw_grumps(SH_PASS, square1_vbo, 4);
 
 	error = glGetError();
 	if (error != 0) {
