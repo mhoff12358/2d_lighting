@@ -22,7 +22,7 @@ private:
 	//Temporary stuff, should be moved out into actors
 	GLuint grump_vbo;
 	GLuint square1_vbo;
-	GLuint square4_vbo;
+	GLuint arc_vbo;
 	GLuint occluder_frame_buffer;
 	GLuint shadow_frame_buffer;
 
@@ -42,7 +42,7 @@ public:
 
 	void render_texture(SH_prog_id shader, TH_tex_id texture, GLuint, unsigned int);
 	void render_grumps(SH_prog_id, GLuint, unsigned int);
-	void render_light(SH_prog_id, TH_tex_id);
+	void render_light(SH_prog_id, TH_tex_id, array<float, 2>);
 	
 	void draw_screen();	
 	void draw_light(array<float, 2> center_loc, unsigned int render_size);

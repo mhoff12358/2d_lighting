@@ -70,49 +70,18 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*(3+2), sq1vals, GL_STATIC_DRAW);
 
-	glGenBuffers(1, &square4_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, square4_vbo);
+	glGenBuffers(1, &arc_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, arc_vbo);
 
-	float sq4vals[4*4*(3+2)] = {
-		//Vertex locations
-		//Bottom left, bottom right, top left, top right
-		-0.5,-0.5, -1.0,
-		 0.0,-0.5, -1.0,
-		 0.0, 0.0, -1.0,
-		-0.5, 0.0, -1.0,
-		 0.0,-0.5, -1.0,
-		 0.5,-0.5, -1.0,
-		 0.5, 0.0, -1.0,
-		 0.0, 0.0, -1.0,
-		-0.5, 0.0, -1.0,
-		 0.0, 0.0, -1.0,
-		 0.0, 0.5, -1.0,
-		-0.5, 0.5, -1.0,
-		 0.0, 0.0, -1.0,
-		 0.5, 0.0, -1.0,
-		 0.5, 0.5, -1.0,
-		 0.0, 0.5, -1.0,
-		 //Texture locations
-		0.0, 1.0,
-		0.5, 1.0,
-		0.5, 0.5,
-		0.0, 0.5,
-		0.5, 1.0,
-		1.0, 1.0,
-		1.0, 0.5,
-		0.5, 0.5,
-		0.0, 0.5,
-		0.5, 0.5,
-		0.5, 0.0,
-		0.0, 0.0,
-		0.5, 0.5,
-		1.0, 0.5,
-		1.0, 0.0,
-		0.5, 0.0,
+	float arcvals[4*3] = {
+		0.0,0.0, -1.0,
+		1.0,0.0, -1.0,
+		1.0,1.0, -1.0,
+		0.0,1.0, -1.0,
 	};
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*4*(3+2), sq4vals, GL_STATIC_DRAW);
 	
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*3, arcvals, GL_STATIC_DRAW);
+
 	// game.get_state().bind_texture(TH_SHADOW);
 	glGenFramebuffers(1, &shadow_frame_buffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadow_frame_buffer);
@@ -154,7 +123,7 @@ void ViewDrawer::render_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo
 	glDrawArrays(GL_QUADS, 0, vbo_num);
 }
 
-void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map) {
+void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, array<float, 2> theta_range) {
 	game.get_state().use_program(shader);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -169,10 +138,20 @@ void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map) {
 	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), light_color[0], light_color[1], light_color[2]);
 	glUniform1i(game.get_state().get_uniform_loc(shader, "shadow_texture"), 1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, square1_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, arc_vbo);
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
 	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glDrawArrays(GL_QUADS, 0, 4);
+
+	float offset_t = theta_range[0];
+	float total_t = theta_range[1]-offset_t;
+	while (total_t > 0) {
+		//Draw an arc with range of total_theta offset by offset_theta
+		glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), fmin(total_t, M_PI/2.0));
+		glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), offset_t);
+		glDrawArrays(GL_QUADS, 0, 4);
+		offset_t += M_PI/2;
+		total_t -= M_PI/2;
+	}
 }
 
 void ViewDrawer::render_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
@@ -223,7 +202,7 @@ void ViewDrawer::draw_occluders(array<float, 2> center_loc, unsigned int render_
 
 	glPushMatrix();
 	glTranslatef(-center_loc[0], -center_loc[1], 0);
-	render_grumps(SH_OCCLUDER, square4_vbo, 16);
+	render_grumps(SH_OCCLUDER, square1_vbo, 4);
 	glPopMatrix();
 
 	error = glGetError();
@@ -281,8 +260,8 @@ void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size
 	
 	glPushMatrix();
 	glTranslatef(center_loc[0], center_loc[1], 0);
-	glScalef(render_size, render_size, 1);
-	render_light(SH_SHADOW_LIGHT, TH_SHADOW);
+	glScalef(render_size/2.0, render_size/2.0, 1);
+	render_light(SH_SHADOW_LIGHT, TH_SHADOW, array<float, 2>({{M_PI/4.0, M_PI}}));
 	glPopMatrix();
 
 	GLuint error;

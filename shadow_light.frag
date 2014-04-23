@@ -22,4 +22,5 @@ void main()
 		//final_color = vec4(1.0-distance, 1.0-distance, 1.0-distance, 1.0-distance);
 		final_color = vec4(light_color, 1.0-distance);
 	}
+	//final_color = vec4(frag_coord, 0.0, 1.0);
 }

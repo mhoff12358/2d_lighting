@@ -126,7 +126,8 @@ void ViewState::create_shaders() {
 
 	ShaderProgram& sl_shad = sh.access_program(SH_SHADOW_LIGHT);
 	sl_shad.create_program();
-	sl_shad.add_shader(GL_VERTEX_SHADER, "pass_color.vert");
+	// sl_shad.add_shader(GL_VERTEX_SHADER, "pass_color.vert");
+	sl_shad.add_shader(GL_VERTEX_SHADER, "create_arc.vert");
 	sl_shad.add_shader(GL_FRAGMENT_SHADER, "shadow_light.frag");
 	sl_shad.add_attribute("in_position");
 	sl_shad.link_program();
