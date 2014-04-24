@@ -73,14 +73,26 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	glGenBuffers(1, &arc_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, arc_vbo);
 
-	float arcvals[4*3] = {
-		0.0,0.0, -1.0,
-		1.0,0.0, -1.0,
-		1.0,1.0, -1.0,
-		0.0,1.0, -1.0,
+	//Could increase the number of points in the triangle fan, which would
+	//decrease the number of erraneous pixels sent to the fragment shader but
+	//increase the number of vertex points sent. Probably should be a pretty
+	//number of vertices, I unno. Also, the x value is the theta, y value the
+	//radius. z does nothing. Should probably find a way to just send the 2
+	//points.
+	float arcvals[10*3] = {
+		0.0, 0.0, -1.0,
+		M_PI*0.0/4.0, 1.0, -1.0,
+		M_PI*1.0/4.0, 1.0, -1.0,
+		M_PI*2.0/4.0, 1.0, -1.0,
+		M_PI*3.0/4.0, 1.0, -1.0,
+		M_PI*4.0/4.0, 1.0, -1.0,
+		M_PI*5.0/4.0, 1.0, -1.0,
+		M_PI*6.0/4.0, 1.0, -1.0,
+		M_PI*7.0/4.0, 1.0, -1.0,
+		M_PI*8.0/4.0, 1.0, -1.0,
 	};
 	
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*4*3, arcvals, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*3, arcvals, GL_STATIC_DRAW);
 
 	// game.get_state().bind_texture(TH_SHADOW);
 	glGenFramebuffers(1, &shadow_frame_buffer);
@@ -142,16 +154,20 @@ void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, array<flo
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
 	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	float offset_t = theta_range[0];
-	float total_t = theta_range[1]-offset_t;
-	while (total_t > 0) {
-		//Draw an arc with range of total_theta offset by offset_theta
-		glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), fmin(total_t, M_PI/2.0));
-		glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), offset_t);
-		glDrawArrays(GL_QUADS, 0, 4);
-		offset_t += M_PI/2;
-		total_t -= M_PI/2;
-	}
+	// float offset_t = theta_range[0];
+	// float total_t = theta_range[1]-offset_t;
+	// while (total_t > 0) {
+	// 	//Draw an arc with range of total_theta offset by offset_theta
+	// 	glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), fmin(total_t, M_PI/2.0));
+	// 	glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), offset_t);
+	// 	glDrawArrays(GL_QUADS, 0, 4);
+	// 	offset_t += M_PI/2;
+	// 	total_t -= M_PI/2;
+	// }
+	glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), theta_range[1]-theta_range[0]);
+	glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), theta_range[0]);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 10);
+	
 }
 
 void ViewDrawer::render_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
@@ -245,7 +261,7 @@ void ViewDrawer::setup_screen_render() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size) {
+void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size, array<float, 2> arc) {
 	draw_occluders(center_loc, render_size);
 	compress_shadows();
 	
@@ -261,7 +277,7 @@ void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size
 	glPushMatrix();
 	glTranslatef(center_loc[0], center_loc[1], 0);
 	glScalef(render_size/2.0, render_size/2.0, 1);
-	render_light(SH_SHADOW_LIGHT, TH_SHADOW, array<float, 2>({{M_PI/4.0, M_PI}}));
+	render_light(SH_SHADOW_LIGHT, TH_SHADOW, arc);
 	glPopMatrix();
 
 	GLuint error;
@@ -276,10 +292,7 @@ void ViewDrawer::draw_background() {
 }
 
 void ViewDrawer::draw_lights() {
-	// draw_light(array<float, 2>({{light_x-200, light_y}}), light_size);
-	// draw_light(array<float, 2>({{light_x+200, light_y}}), light_size);
-	// draw_light(array<float, 2>({{425+light_x, light_y}}), light_size);
-	draw_light(array<float, 2>({{light_x, light_y}}), light_size);
+	draw_light(array<float, 2>({{light_x, light_y}}), light_size, array<float, 2>({{M_PI/4.0, M_PI}}));
 }
 
 void ViewDrawer::draw_visuals() {

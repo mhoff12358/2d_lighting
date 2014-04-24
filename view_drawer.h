@@ -45,7 +45,7 @@ public:
 	void render_light(SH_prog_id, TH_tex_id, array<float, 2>);
 	
 	void draw_screen();	
-	void draw_light(array<float, 2> center_loc, unsigned int render_size);
+	void draw_light(array<float, 2> center_loc, unsigned int render_size, array<float, 2> arc);
 	void draw_occluders(array<float, 2> center_loc, unsigned int render_size);
 	void compress_shadows();
 	void setup_screen_render();
