@@ -19,6 +19,7 @@ enum TH_tex_id {
 	TH_GRUMP,
 	TH_OCCLUDER,
 	TH_SHADOW,
+	TH_GROUND,
 	TH_NUM_TEX
 };
 

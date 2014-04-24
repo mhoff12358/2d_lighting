@@ -12,8 +12,8 @@ EXE = main.exe
 
 all: $(EXE)
 
-$(EXE): main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o
-	$(COMPILER) main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o $(LD_FLAGS) -o $@
+$(EXE): main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o
+	$(COMPILER) main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o $(LD_FLAGS) -o $@
 
 main.o: main.cpp main.h
 	$(COMPILER) $(COMPILER_FLAGS) main.cpp -o $@
@@ -29,6 +29,9 @@ shader.o: shader.cpp shader.h
 
 actor.o: actor.cpp actor.h
 	$(COMPILER) $(COMPILER_FLAGS) actor.cpp -o $@
+
+light.o: light.cpp light.h
+	$(COMPILER) $(COMPILER_FLAGS) light.cpp -o $@
 
 view_drawer.o: view_drawer.cpp view_drawer.h
 	$(COMPILER) $(COMPILER_FLAGS) view_drawer.cpp -o $@

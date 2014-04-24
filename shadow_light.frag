@@ -4,6 +4,7 @@
 
 uniform sampler1D shadow_texture;
 uniform vec3 light_color;
+uniform float distance_scale;
 
 in vec2 frag_coord;
 out vec4 final_color;
@@ -19,8 +20,8 @@ void main()
 	if (distance > texture1D(shadow_texture, theta)) {
 		final_color = vec4(0.0, 0.0, 0.0, 0.0);
 	} else {
+		distance = min(1.0, distance*distance_scale);
 		//final_color = vec4(1.0-distance, 1.0-distance, 1.0-distance, 1.0-distance);
 		final_color = vec4(light_color, 1.0-distance);
 	}
-	//final_color = vec4(frag_coord, 0.0, 1.0);
 }

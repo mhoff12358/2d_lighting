@@ -38,13 +38,18 @@ void ViewDrawer::initialize() {
 	projection_set_screen(1000, 800);
 	glViewport(0, 0, 1000, 800);
 
+	light_bundles.emplace_back(array<float, 2>({{0.0, 0.0}}));
+	light_bundles[0].add_light(400.0, array<float, 2>({{M_PI, M_PI/2.0}}), array<float, 3>({{0.0, 0.0, 1.0}}));
+	light_bundles[0].get_lights()[0].set_rotation_scale(1.0);
+	light_bundles[0].add_light(200.0, array<float, 2>({{M_PI, 0.0}}), array<float, 3>({{0.0, 1.0, 0.0}}));
+
 	// SDL_GL_SetSwapInterval(1);
 }
 
 void ViewDrawer::deinitialize() {
 }
 
-void ViewDrawer::projection_set_screen(int width, int height) {
+void ViewDrawer::projection_set_screen(float width, float height) {
 	//Set the camera to an orthogonal projection so that it is the whole screen 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -82,13 +87,13 @@ void ViewDrawer::TEMP_VBO_SHIT() {
 	float arcvals[10*3] = {
 		0.0, 0.0, -1.0,
 		M_PI*0.0/4.0, 1.0, -1.0,
-		M_PI*1.0/4.0, 1.0, -1.0,
+		M_PI*1.0/4.0, 2*pow(2,0.5), -1.0,
 		M_PI*2.0/4.0, 1.0, -1.0,
-		M_PI*3.0/4.0, 1.0, -1.0,
+		M_PI*3.0/4.0, 2*pow(2,0.5), -1.0,
 		M_PI*4.0/4.0, 1.0, -1.0,
-		M_PI*5.0/4.0, 1.0, -1.0,
+		M_PI*5.0/4.0, 2*pow(2,0.5), -1.0,
 		M_PI*6.0/4.0, 1.0, -1.0,
-		M_PI*7.0/4.0, 1.0, -1.0,
+		M_PI*7.0/4.0, 2*pow(2,0.5), -1.0,
 		M_PI*8.0/4.0, 1.0, -1.0,
 	};
 	
@@ -135,7 +140,7 @@ void ViewDrawer::render_texture(SH_prog_id shader, TH_tex_id texture, GLuint vbo
 	glDrawArrays(GL_QUADS, 0, vbo_num);
 }
 
-void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, array<float, 2> theta_range) {
+void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, float max_distance, vector<Light>& lights) {
 	game.get_state().use_program(shader);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -147,26 +152,21 @@ void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, array<flo
 
 	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "view_matrix"), 1, false, mvmat);
 	glUniformMatrix4fv(game.get_state().get_uniform_loc(shader, "proj_matrix"), 1, false, promat);
-	glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), light_color[0], light_color[1], light_color[2]);
 	glUniform1i(game.get_state().get_uniform_loc(shader, "shadow_texture"), 1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, arc_vbo);
 	glEnableVertexAttribArray(game.get_state().get_shader_attrs(shader)[0].first);
 	glVertexAttribPointer(game.get_state().get_shader_attrs(shader)[0].first, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	// float offset_t = theta_range[0];
-	// float total_t = theta_range[1]-offset_t;
-	// while (total_t > 0) {
-	// 	//Draw an arc with range of total_theta offset by offset_theta
-	// 	glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), fmin(total_t, M_PI/2.0));
-	// 	glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), offset_t);
-	// 	glDrawArrays(GL_QUADS, 0, 4);
-	// 	offset_t += M_PI/2;
-	// 	total_t -= M_PI/2;
-	// }
-	glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), theta_range[1]-theta_range[0]);
-	glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), theta_range[0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 10);
+	for (auto light_cone = lights.begin(); light_cone != lights.end(); ++light_cone) {
+		array<float, 3>& light_color = light_cone->get_color();
+		array<float, 2>& light_arc = light_cone->get_arc();
+		glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), light_color[0], light_color[1], light_color[2]);
+		glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), light_arc[0]);
+		glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), light_arc[1]);
+		glUniform1f(game.get_state().get_uniform_loc(shader, "distance_scale"), max_distance/light_cone->get_distance());
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 10);
+	}
 	
 }
 
@@ -202,7 +202,7 @@ void ViewDrawer::render_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vb
 	glPopMatrix();
 }
 
-void ViewDrawer::draw_occluders(array<float, 2> center_loc, unsigned int render_size) {
+void ViewDrawer::draw_occluders(array<float, 2>& center_loc, float render_size) {
 	GLuint error;
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
@@ -230,7 +230,7 @@ void ViewDrawer::draw_occluders(array<float, 2> center_loc, unsigned int render_
 	}
 }
 
-void ViewDrawer::compress_shadows() {
+void ViewDrawer::compress_shadows(float light_size) {
 	GLuint error;
 	GLenum gca0 = GL_COLOR_ATTACHMENT0;
 
@@ -261,9 +261,10 @@ void ViewDrawer::setup_screen_render() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size, array<float, 2> arc) {
-	draw_occluders(center_loc, render_size);
-	compress_shadows();
+void ViewDrawer::draw_light(LightBundle& light_bundle) {
+	array<float, 2>& light_center = light_bundle.get_center();
+	draw_occluders(light_center, light_bundle.get_max_distance()*2);
+	compress_shadows(light_bundle.get_max_distance()*2);
 	
 	setup_screen_render();
 	
@@ -275,9 +276,9 @@ void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size
 	glPopMatrix();
 	
 	glPushMatrix();
-	glTranslatef(center_loc[0], center_loc[1], 0);
-	glScalef(render_size/2.0, render_size/2.0, 1);
-	render_light(SH_SHADOW_LIGHT, TH_SHADOW, arc);
+	glTranslatef(light_center[0], light_center[1], 0);
+	glScalef(light_bundle.get_max_distance(), light_bundle.get_max_distance(), 1);
+	render_light(SH_SHADOW_LIGHT, TH_SHADOW, light_bundle.get_max_distance(), light_bundle.get_lights());
 	glPopMatrix();
 
 	GLuint error;
@@ -288,11 +289,26 @@ void ViewDrawer::draw_light(array<float, 2> center_loc, unsigned int render_size
 }
 
 void ViewDrawer::draw_background() {
+	GLuint error;
 
+	setup_screen_render();
+
+	glPushMatrix();
+	// glTranslatef(-300, -400, 0);
+	glScalef(600, 600, 1);
+	render_texture(SH_PASS, TH_GROUND, square1_vbo, 4);
+	glPopMatrix();
+
+	error = glGetError();
+	if (error != 0) {
+		std::cerr << "GL ERROR DRAWING BACKGROUND TEXTURES: " << error << " " << gluErrorString(error) << std::endl;
+	}
 }
 
 void ViewDrawer::draw_lights() {
-	draw_light(array<float, 2>({{light_x, light_y}}), light_size, array<float, 2>({{M_PI/4.0, M_PI}}));
+	for (auto lb = light_bundles.begin(); lb != light_bundles.end(); ++lb) {
+		draw_light(*lb);
+	}
 }
 
 void ViewDrawer::draw_visuals() {
@@ -315,4 +331,8 @@ void ViewDrawer::draw_screen() {
 	draw_background();
 	draw_lights();
 	draw_visuals();
+}
+
+vector<LightBundle>& ViewDrawer::get_light_bundles() {
+	return light_bundles;
 }

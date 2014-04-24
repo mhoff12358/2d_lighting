@@ -150,8 +150,10 @@ void ViewState::load_images() {
 	gen_texture(TH_GRUMP);
 	gen_texture(TH_OCCLUDER);
 	gen_texture(TH_SHADOW);
+	gen_texture(TH_GROUND);
 
 	load_texture_image(TH_GRUMP, "images/arin_grump.png");
+	load_texture_image(TH_GROUND, "images/ground.png");
 	load_texture_empty(TH_OCCLUDER, 1024, 1024);
 	load_texture_empty(TH_SHADOW, 1024);
 }
