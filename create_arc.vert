@@ -16,6 +16,6 @@ void main()
 	float dist = in_position.y;
 	theta = theta*total_theta/(2*M_PI)+offset_theta;
 	in_position = vec3(dist*cos(theta), dist*sin(theta), in_position.z);
-	gl_Position = proj_matrix*vec4(in_position, 1.0);
+	gl_Position = proj_matrix*view_matrix*vec4(in_position, 1.0);
 	frag_coord = vec2(in_position.x, in_position.y);
 }

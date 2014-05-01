@@ -5,11 +5,18 @@ Light::Light(float dist, array<float, 2> arc_spec, array<float, 3> light_color) 
 
 void Light::update(float time_mod) {
 	arc[1] += time_mod*rotation_scale;
-	arc[1] = fmod(arc[1]+2*M_PI, 2*M_PI);
+	arc[1] = fmod(arc[1]+2*PI, 2*PI);
+
+	distance_modification += time_mod*distance_scale;
+	distance_modification = fmod(distance_modification+2*PI, 2*PI);
 }
 
 float Light::get_distance() {
 	return distance;
+}
+
+float Light::get_active_distance() {
+	return distance*(1-distance_modification_max*(sin(distance_modification)+1)/2.0);
 }
 
 array<float, 2>& Light::get_arc() {
@@ -22,6 +29,18 @@ array<float, 3>& Light::get_color() {
 
 void Light::set_rotation_scale(float rs) {
 	rotation_scale = rs;
+}
+
+void Light::set_distance(float d) {
+	distance = d;
+}
+
+void Light::set_distance_scale(float ds) {
+	distance_scale = ds;
+}
+
+void Light::set_distance_modification_max(float dmm) {
+	distance_modification_max = dmm;
 }
 
 LightBundle::LightBundle() {

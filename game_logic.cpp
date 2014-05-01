@@ -35,8 +35,13 @@ void GameLogic::update_world() {
 		game.get_drawer().get_light_bundles()[0].get_center()[1] += -time_scale*move_scale;
 	}
 
+	float game_time = time_scale;
+	if (ioc.get_keypressed(SDLK_SPACE)) {
+		game_time *= 0.1;
+	}
+
 	for (auto lb = game.get_drawer().get_light_bundles().begin(); lb != game.get_drawer().get_light_bundles().end(); ++lb) {
-		lb->update(time_scale);
+		lb->update(game_time);
 	}
 
 	// if (ioc.get_keypressed(SDLK_RIGHTBRACKET)) {

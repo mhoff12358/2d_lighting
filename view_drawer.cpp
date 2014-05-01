@@ -42,6 +42,8 @@ void ViewDrawer::initialize() {
 	light_bundles[0].add_light(400.0, array<float, 2>({{M_PI, M_PI/2.0}}), array<float, 3>({{0.0, 0.0, 1.0}}));
 	light_bundles[0].get_lights()[0].set_rotation_scale(1.0);
 	light_bundles[0].add_light(200.0, array<float, 2>({{M_PI, 0.0}}), array<float, 3>({{0.0, 1.0, 0.0}}));
+	light_bundles[0].get_lights()[1].set_distance_scale(1.0);
+	light_bundles[0].get_lights()[1].set_distance_modification_max(0.5);
 
 	// SDL_GL_SetSwapInterval(1);
 }
@@ -54,6 +56,7 @@ void ViewDrawer::projection_set_screen(float width, float height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-width/2.0, width/2.0, -height/2.0, height/2.0, .1, 10.0);
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void ViewDrawer::TEMP_VBO_SHIT() {
@@ -164,7 +167,7 @@ void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, float max
 		glUniform3f(game.get_state().get_uniform_loc(shader, "light_color"), light_color[0], light_color[1], light_color[2]);
 		glUniform1f(game.get_state().get_uniform_loc(shader, "total_theta"), light_arc[0]);
 		glUniform1f(game.get_state().get_uniform_loc(shader, "offset_theta"), light_arc[1]);
-		glUniform1f(game.get_state().get_uniform_loc(shader, "distance_scale"), max_distance/light_cone->get_distance());
+		glUniform1f(game.get_state().get_uniform_loc(shader, "distance_scale"), max_distance/light_cone->get_active_distance());
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 10);
 	}
 	
