@@ -28,6 +28,9 @@ private:
 public:
 	GameLogic(Game& g) : game(g) {}
 
+	void initialize();
+	void deinitialize();
+
 	void update_world();
 
 	void add_mouse_motion(array<int, 4>);

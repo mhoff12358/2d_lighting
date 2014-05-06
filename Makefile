@@ -3,20 +3,24 @@ SDL_INCLUDE = -IC:/MinGW/include
 SDL_LIB = -LC:/MinGW/lib -lSDL2main -lSDL2 -lSDL2_image
 # GL_INCLUDE = 
 GL_LIB = -lglew32 -lopengl32 -lglu32
+BOX_LIB = -lBox2D
 
 COMPILER = g++
 COMPILER_FLAGS = -Wall -c -g -std=c++11 $(SDL_INCLUDE)
-LD_FLAGS = -lmingw32 -mwindows -mconsole -std=c++11 $(GL_LIB) $(SDL_LIB)
+LD_FLAGS = -lmingw32 -mwindows -mconsole -std=c++11 $(GL_LIB) $(SDL_LIB) $(BOX_LIB)
 
 EXE = main.exe
 
 all: $(EXE)
 
-$(EXE): main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o
-	$(COMPILER) main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o $(LD_FLAGS) -o $@
+$(EXE): main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o game_state.o
+	$(COMPILER) main.o view_state.o view_drawer.o io_controller.o game_logic.o shader.o my_math.o texture_handler.o actor.o light.o game_state.o $(LD_FLAGS) -o $@
 
 main.o: main.cpp main.h
 	$(COMPILER) $(COMPILER_FLAGS) main.cpp -o $@
+
+game_state.o: game_state.cpp game_state.h
+	$(COMPILER) $(COMPILER_FLAGS) game_state.cpp -o $@
 
 view_state.o: view_state.cpp view_state.h
 	$(COMPILER) $(COMPILER_FLAGS) view_state.cpp -o $@

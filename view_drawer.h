@@ -13,6 +13,7 @@
 #include "texture_handler.h"
 #include "shader.h"
 #include "light.h"
+#include "actor.h"
 
 class Game;
 
@@ -42,7 +43,8 @@ public:
 	void render_texture(SH_prog_id shader, TH_tex_id texture, GLuint, unsigned int);
 	void render_grumps(SH_prog_id, GLuint, unsigned int);
 	void render_light(SH_prog_id, TH_tex_id, float, vector<Light>&);
-	
+	void render_actor(Actor& actor);
+
 	void draw_screen();	
 	void draw_light(LightBundle&);
 	void draw_occluders(array<float, 2>& center_loc, float render_size);

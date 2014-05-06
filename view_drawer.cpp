@@ -35,8 +35,8 @@ void ViewDrawer::initialize() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	projection_set_screen(1000, 800);
-	glViewport(0, 0, 1000, 800);
+	projection_set_screen(game.get_state().screen_width(), game.get_state().screen_height());
+	glViewport(0, 0, game.get_state().screen_width(), game.get_state().screen_height());
 
 	light_bundles.emplace_back(array<float, 2>({{0.0, 0.0}}));
 	light_bundles[0].add_light(400.0, array<float, 2>({{M_PI, M_PI/2.0}}), array<float, 3>({{0.0, 0.0, 1.0}}));
@@ -170,7 +170,14 @@ void ViewDrawer::render_light(SH_prog_id shader, TH_tex_id shadow_map, float max
 		glUniform1f(game.get_state().get_uniform_loc(shader, "distance_scale"), max_distance/light_cone->get_active_distance());
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 10);
 	}
-	
+}
+
+void ViewDrawer::render_actor(Actor& actor) {
+	glPushMatrix();
+	glTranslatef(actor.get_world_coord()[0], actor.get_world_coord()[1], 0.0);
+	glScalef(actor.get_world_size()[0], actor.get_world_size()[1], 1.0);
+	render_texture(actor.get_shader_id(), actor.get_texture_id(), square1_vbo, 4);
+	glPopMatrix();
 }
 
 void ViewDrawer::render_grumps(SH_prog_id shader_id, GLuint vbo, unsigned int vbo_num) {
@@ -259,8 +266,8 @@ void ViewDrawer::compress_shadows(float light_size) {
 
 void ViewDrawer::setup_screen_render() {
 	//Set up actual render to screen
-	projection_set_screen(1000, 800);
-	glViewport(0, 0, 1000, 800);
+	projection_set_screen(game.get_state().screen_width(), game.get_state().screen_height());
+	glViewport(0, 0, game.get_state().screen_width(), game.get_state().screen_height());
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -273,7 +280,7 @@ void ViewDrawer::draw_light(LightBundle& light_bundle) {
 	
 	//Testing stuff
 	glPushMatrix();
-	glScalef(800, 800, 1);
+	glScalef(game.get_state().screen_height(), game.get_state().screen_height(), 1);
 	// render_texture(SH_TEX_1_PASS, TH_SHADOW, square1_vbo, 4);
 	// render_texture(SH_PASS, TH_OCCLUDER, square1_vbo, 4);
 	glPopMatrix();
@@ -319,6 +326,9 @@ void ViewDrawer::draw_visuals() {
 	
 	setup_screen_render();
 	render_grumps(SH_PASS, square1_vbo, 4);
+	for (auto actor_to_render = game.get_game_state().get_actors().begin(); actor_to_render != game.get_game_state().get_actors().end(); ++actor_to_render) {
+		render_actor(*actor_to_render);
+	}
 
 	error = glGetError();
 	if (error != 0) {

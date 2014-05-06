@@ -1,6 +1,5 @@
 #include "main.h"
 #include <iostream>
-#include <SDL2/SDL.h>
 
 
 void Game::exit_program(int exit_code) {
@@ -55,6 +54,10 @@ ViewState& Game::get_state() {
 
 ViewDrawer& Game::get_drawer() {
 	return vd;
+}
+
+GameState& Game::get_game_state() {
+	return gs;
 }
 
 int main(int argc, char ** argv) {
